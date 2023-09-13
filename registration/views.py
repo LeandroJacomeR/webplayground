@@ -1,6 +1,7 @@
 from typing import Any
 from django.db import models
-from .forms import UserCreationFormWithEmail, ProfileForm
+from django.forms.models import BaseModelForm
+from .forms import UserCreationFormWithEmail, ProfileForm, EmailForm
 from django.views.generic import CreateView
 from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
@@ -40,3 +41,20 @@ class ProfileUpdate(UpdateView):
         #recuperamos el objeto que se va a editar
         profile, created = Profile.objects.get_or_create(user=self.request.user)
         return profile
+
+@method_decorator(login_required, name='dispatch')
+class EmailUpdate(UpdateView):
+    form_class = EmailForm
+    success_url = reverse_lazy('profile')
+    template_name = 'registration/profile_email_form.html'
+
+    def get_object(self):
+        #recuperamos el objeto que se va a editar
+        return self.request.user
+    
+    def get_form(self, form_class=None):
+        form = super(EmailUpdate, self).get_form()
+        # Modificar en tiempo real
+        form.fields['email'].widget = forms.EmailInput(
+            attrs={'class':'form-control mb-2', 'placeholder':'Dirección email'})
+        return form
